@@ -1,0 +1,12 @@
+{
+  "users": [
+    {
+      "date": "2022-11-11T19:46:45.279Z",
+      "email": "antuandelog@gmail.com",
+      "password": "123",
+      "repeatedPassword": "123",
+      "id": 1
+    }
+  ],
+  "notes": []
+}
