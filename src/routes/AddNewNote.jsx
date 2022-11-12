@@ -1,8 +1,13 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackLink from '../components/BackLink';
-import { useUserContext } from '../components/userContext';
+import Button from '../components/Button';
+import CustomInput from '../components/CustomInput';
+import Error from '../components/Error';
+import TextAreaNote from '../components/TextAreaNote';
+import { useUserContext } from '../components/UserContextProvider';
 import API_PATH from '../utils/API_PATH';
+import checkForEmptyFields from '../utils/checkForEmptyFields';
 
 export default function AddNewNote() {
   const navigate = useNavigate();
@@ -16,11 +21,8 @@ export default function AddNewNote() {
   const [errorMessage, setErrorMessage] = useState(null);
 
   const handleSave = useCallback(() => {
-    for (let key in note) {
-      if (!note[key]) {
-        setErrorMessage(`${key} is empty`);
-        return;
-      }
+    if (!checkForEmptyFields(note, setErrorMessage)) {
+      return;
     }
     const noteObject = {
       date: new Date(),
@@ -32,8 +34,9 @@ export default function AddNewNote() {
       body: JSON.stringify(noteObject),
       headers: { 'Content-Type': 'application/json' },
     })
-      .then(() => {
-        navigate(`/notes/${user.id}`);
+      .then(async (res) => {
+        const { id } = await res.json();
+        navigate(`/notes/${user.id}/${id}`);
       })
       .catch(() => {
         alert('Error');
@@ -44,26 +47,21 @@ export default function AddNewNote() {
     <div className='mt-5 ml-5 flex flex-col justify-start gap-4 items-center text-2xl'>
       <div className='flex self-start justify-between w-full'>
         <BackLink path={`/notes/${user.id}`} />
-        <div className='font-bold'>Add new note</div>
+        <h2 className='font-bold'>Add new note</h2>
       </div>
-      <input
+      <CustomInput
         placeholder='Title'
         name='title'
         onChange={handleInputNoteChange}
-        className='border border-solid border-black bg-zinc-100 px-2 rounded-lg w-full'
+        className=' w-full'
       />
-      <textarea
+      <TextAreaNote
         placeholder='Add content'
-        rows='4'
-        name='content'
         onChange={handleInputNoteChange}
-        className='border border-solid border-black bg-zinc-100 px-2 rounded-lg w-full'
       />
 
-      <div className='h-2 text-xl underline text-red-400'>{errorMessage}</div>
-      <button onClick={handleSave} className='hover:text-cyan-600 font-bold'>
-        Save note
-      </button>
+      <Error error={errorMessage} />
+      <Button handle={handleSave}>Save note</Button>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { NavLink, Outlet, ScrollRestoration } from 'react-router-dom';
-import { useUserContext } from '../components/userContext';
+import { useUserContext } from '../components/UserContextProvider';
 
 export default function Layout() {
   const user = useUserContext();

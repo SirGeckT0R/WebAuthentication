@@ -1,7 +1,12 @@
 import { useCallback, useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useUserContext } from '../components/userContext';
+import { useNavigate } from 'react-router-dom';
+import Button from '../components/Button';
+import CustomInput from '../components/CustomInput';
+import CustomLink from '../components/CustomLink';
+import Error from '../components/Error';
+import { useUserContext } from '../components/UserContextProvider';
 import API_PATH from '../utils/API_PATH';
+import checkForEmptyFields from '../utils/checkForEmptyFields';
 
 export default function Login() {
   const userContext = useUserContext();
@@ -29,11 +34,8 @@ export default function Login() {
   }, []);
 
   const handleLogin = useCallback(() => {
-    for (let key in user) {
-      if (!user[key]) {
-        setErrorMessage(`${key} is empty`);
-        return;
-      }
+    if (!checkForEmptyFields(user, setErrorMessage)) {
+      return;
     }
     fetch(
       `${API_PATH}/users?email=${user.email.toLowerCase()}&password=${
@@ -47,33 +49,33 @@ export default function Login() {
         } else {
           setErrorMessage('No such user or invalid password');
         }
+      })
+      .catch(() => {
+        setErrorMessage('Server error.');
       });
   }, [user, userContext]);
 
   return (
     <div className='mt-16 mx-5 flex flex-col gap-5 items-center text-2xl'>
-      <input
+      <CustomInput
         placeholder='email'
         name='email'
         onChange={handleInputChange}
         type='email'
-        className='border border-solid border-black bg-zinc-100 px-2 rounded-lg w-2/5'
+        className='w-2/5'
       />
-      <input
+      <CustomInput
         placeholder='password'
         name='password'
         onChange={handleInputChange}
         type='password'
-        className='border border-solid border-black bg-zinc-100 px-2 rounded-lg w-2/5'
+        className='w-2/5'
       />
-      <div className='h-7 underline text-red-400'>{errorMessage}</div>
-      <button onClick={handleLogin} className='hover:text-cyan-600 font-bold'>
-        Login
-      </button>
 
-      <Link to='/register' className='hover:text-cyan-600 font-bold'>
-        Don't have account? Register
-      </Link>
+      <Error error={errorMessage} />
+      <Button handle={handleLogin}>Login</Button>
+
+      <CustomLink path='/register'>Don't have account? Register</CustomLink>
     </div>
   );
 }

@@ -1,16 +1,19 @@
 import { useCallback, useState } from 'react';
 import { useNavigate, useRouteLoaderData } from 'react-router-dom';
 import BackLink from '../components/BackLink';
-import { useUserContext } from '../components/userContext';
+import Button from '../components/Button';
+import CustomInput from '../components/CustomInput';
+import Error from '../components/Error';
+import TextAreaNote from '../components/TextAreaNote';
+import { useUserContext } from '../components/UserContextProvider';
 import API_PATH from '../utils/API_PATH';
+import checkForEmptyFields from '../utils/checkForEmptyFields';
 
 export default function EditNote() {
   const navigate = useNavigate();
   const { user } = useUserContext();
-  const {
-    note: [firstNote],
-  } = useRouteLoaderData('note');
-  const [noteState, setNoteState] = useState(firstNote);
+  const { note } = useRouteLoaderData('note');
+  const [noteState, setNoteState] = useState(note);
 
   const [errorMessage, setErrorMessage] = useState(null);
   const handleInputNoteChange = useCallback((e) => {
@@ -18,11 +21,8 @@ export default function EditNote() {
   }, []);
 
   const handleSave = useCallback(() => {
-    for (let key in noteState) {
-      if (!noteState[key]) {
-        setErrorMessage(`${key} is empty`);
-        return;
-      }
+    if (!checkForEmptyFields(noteState, setErrorMessage)) {
+      return;
     }
     fetch(`${API_PATH}/notes/${noteState.id}`, {
       method: 'PUT',
@@ -41,28 +41,22 @@ export default function EditNote() {
     <div className='mt-5  ml-5 flex flex-col justify-start gap-4 items-center text-2xl'>
       <div className='flex self-start justify-between w-full'>
         <BackLink path={`/notes/${user.id}`} />
-        <div className='font-bold'>Edit note</div>
+        <h2 className='font-bold'>Edit note</h2>
       </div>
-      <input
+      <CustomInput
         value={noteState.title}
         placeholder='Title'
         name='title'
         onChange={handleInputNoteChange}
-        className='border border-solid border-black bg-zinc-100 px-2 rounded-lg w-full'
+        className='w-full'
       />
-      <textarea
+      <TextAreaNote
         value={noteState.content}
         placeholder='Add content'
-        rows='4'
-        name='content'
         onChange={handleInputNoteChange}
-        className='border border-solid border-black bg-zinc-100 px-2 rounded-lg w-full'
       />
-
-      <div className='h-2 text-xl underline text-red-400'>{errorMessage}</div>
-      <button onClick={handleSave} className='hover:text-cyan-600 font-bold'>
-        Save note
-      </button>
+      <Error error={errorMessage} />
+      <Button handle={handleSave}>Save note</Button>
     </div>
   );
 }

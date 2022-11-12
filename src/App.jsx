@@ -1,6 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
-import { UserContextProvider } from './components/userContext';
+import { UserContextProvider } from './components/UserContextProvider';
 import Layout from './routes/Layout';
 import Login from './routes/Login';
 import About from './routes/About';
@@ -10,6 +10,9 @@ import { Notes, loader as notesLoader } from './routes/Notes';
 import { Note, loader as noteLoader } from './routes/Note';
 import AddNewNote from './routes/AddNewNote';
 import EditNote from './routes/EditNote';
+import CheckForOtherUsers from './components/CheckForOtherUsers';
+import deleteNote from './utils/deleteNote';
+import Footer from './components/Footer';
 
 const router = createBrowserRouter([
   {
@@ -25,9 +28,17 @@ const router = createBrowserRouter([
         element: <About />,
       },
       {
-        path: '/notes/:id',
+        path: '/notes/:id/delete',
+        action: deleteNote,
+      },
+      {
+        path: '/notes/:usId',
         loader: notesLoader,
-        element: <Notes />,
+        element: (
+          <CheckForOtherUsers>
+            <Notes />
+          </CheckForOtherUsers>
+        ),
       },
       {
         path: '/notes/:usId/:id',
@@ -36,23 +47,26 @@ const router = createBrowserRouter([
         children: [
           {
             path: '/notes/:usId/:id',
-
             loader: noteLoader,
-            element: <Note />,
+            element: (
+              <CheckForOtherUsers>
+                <Note />
+              </CheckForOtherUsers>
+            ),
           },
           {
             path: '/notes/:usId/:id/edit',
-            element: <EditNote />,
+            element: (
+              <CheckForOtherUsers>
+                <EditNote />
+              </CheckForOtherUsers>
+            ),
           },
         ],
       },
       {
         path: '/notes/add',
         element: <AddNewNote />,
-      },
-      {
-        path: '*',
-        element: <PageNotFound />,
       },
     ],
   },
@@ -64,18 +78,19 @@ const router = createBrowserRouter([
     path: '/register',
     element: <Register />,
   },
+  {
+    path: '*',
+    element: <PageNotFound />,
+  },
 ]);
 
 function App() {
   return (
-    <div className='w-10/12 my-5 mx-auto flex flex-col min-h-screen gap-5 '>
+    <div className='w-10/12 my-5 mx-auto flex flex-col min-h-screen gap-5'>
       <UserContextProvider>
         <RouterProvider router={router} />
       </UserContextProvider>
-      <footer className='w-5/6 flex justify-between mt-auto mb-16 ml-5 border-black border-solid border-t-2'>
-        <span>Created by: Logvinenko Anton</span>
-        <span>BSU: 2022</span>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useUserContext } from './userContext';
+import { useUserContext } from './UserContextProvider';
 import { Navigate } from 'react-router-dom';
 
 export default function ProtectedRoute({ children }) {

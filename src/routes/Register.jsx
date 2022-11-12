@@ -1,9 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useCallback } from 'react';
 import API_PATH from '../utils/API_PATH';
-import checkForSameEmail from '../utils/checkForSameEmail';
+import checkIsUserExists from '../utils/checkIsUserExists';
+import Button from '../components/Button';
+import Error from '../components/Error';
+import CustomInput from '../components/CustomInput';
+import { useUserContext } from '../components/UserContextProvider';
+import checkForEmptyFields from '../utils/checkForEmptyFields';
 
 export default function Register() {
+  const userContext = useUserContext();
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -18,13 +24,9 @@ export default function Register() {
   }, []);
 
   const handleRegister = async () => {
-    for (let key in user) {
-      if (!user[key]) {
-        setErrorMessage(`${key} is empty`);
-        return;
-      }
+    if (!checkForEmptyFields(user, setErrorMessage)) {
+      return;
     }
-
     if (user.password !== user.repeatedPassword) {
       setErrorMessage('Passwords do not match');
       return;
@@ -35,8 +37,7 @@ export default function Register() {
       ...user,
       email: user.email.toLowerCase(),
     };
-
-    const { sameUsers } = await checkForSameEmail(userObject);
+    const { sameUsers } = await checkIsUserExists(userObject);
 
     if (sameUsers.length !== 0) {
       setErrorMessage('User with such email already exists');
@@ -46,43 +47,41 @@ export default function Register() {
         body: JSON.stringify(userObject),
         headers: { 'Content-Type': 'application/json' },
       })
-        .then(() => {
-          navigate('/');
+        .then(async (res) => {
+          const user = await res.json();
+          userContext.setUser(user);
+          navigate(`/`);
         })
         .catch(() => {
-          alert('Error');
+          setErrorMessage('Server error.');
         });
     }
   };
   return (
     <div className='mt-16 mx-5 flex flex-col gap-5 items-center text-2xl'>
-      <input
+      <CustomInput
         placeholder='email'
         name='email'
         type='email'
         onChange={handleInputChange}
-        className='border border-solid border-black bg-zinc-100 px-2 rounded-lg w-2/5'
+        className='w-2/5'
       />
-      <input
+      <CustomInput
         placeholder='password'
         name='password'
         type='password'
         onChange={handleInputChange}
-        className='border border-solid border-black bg-zinc-100 px-2 rounded-lg w-2/5'
+        className='w-2/5'
       />
-      <input
+      <CustomInput
         placeholder='repeat password'
         name='repeatedPassword'
         type='password'
         onChange={handleInputChange}
-        className='border border-solid border-black bg-zinc-100 px-2 rounded-lg w-2/5'
+        className='w-2/5'
       />
-      <div className='h-7 underline text-red-400'>{errorMessage}</div>
-      <button
-        onClick={handleRegister}
-        className='hover:text-cyan-600 font-bold'>
-        Register
-      </button>
+      <Error error={errorMessage} />
+      <Button handle={handleRegister}>Register</Button>
     </div>
   );
 }
